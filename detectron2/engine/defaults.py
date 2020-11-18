@@ -19,6 +19,7 @@ import torch
 from fvcore.common.file_io import PathManager
 from fvcore.nn.precise_bn import get_bn_modules
 from torch.nn.parallel import DistributedDataParallel
+import numpy as np
 
 import detectron2.data.transforms as T
 from detectron2.checkpoint import DetectionCheckpointer
@@ -464,6 +465,7 @@ class DefaultTrainer(SimpleTrainer):
             """
             dataset_dict = copy.deepcopy(dataset_dict)
             image = utils.read_image(dataset_dict["file_name"], format="BGR")
+            
             # Define customized data augmentation methods
             augs = T.AugmentationList([
                 T.RandomBrightness(0.9, 1.1),
@@ -471,15 +473,50 @@ class DefaultTrainer(SimpleTrainer):
                 T.RandomGaussian(prob=0.01),
                 T.RandomRotation((-90,90), sample_style="range"),
             ])
-            auginput = T.AugInput(image)
-            transform = augs(auginput)
-            image = torch.from_numpy(auginput.image.copy().transpose(2,0,1))
-            annos = [
-                utils.transform_instance_annotations(annotation, [transform], image.shape[1:])
-                for annotation in dataset_dict.pop("annotations")
-            ]
-            dataset_dict["image"] = image
-            dataset_dict["instances"] = utils.annotations_to_instances(annos, image.shape[1:])
+            
+            ### Follow dataset_mapper.py
+            if "sem_seg_file_name" in dataset_dict:
+                sem_seg_gt = utils.read_image(dataset_dict.pop("sem_seg_file_name"), "L").squeeze(2)
+            else:
+                sem_seg_gt = None
+        
+            auginput = T.AugInput(image, sem_seg=sem_seg_gt)
+            transforms = augs(auginput)
+            image, sem_seg_gt = auginput.image, auginput.sem_seg
+            
+            image_shape = image.shape[:2]  # h, w
+            dataset_dict["image"] = torch.as_tensor(np.ascontiguousarray(image.transpose(2, 0, 1)))
+            if sem_seg_gt is not None:
+                dataset_dict["sem_seg"] = torch.as_tensor(sem_seg_gt.astype("long"))
+                
+            if "annotations" in dataset_dict:
+                for anno in dataset_dict["annotations"]:
+                    if not True:  # use mask
+                        anno.pop("segmentation", None)
+                    if not False:  # do not use keypoints
+                        anno.pop("keypoints", None)
+
+                # USER: Implement additional transformations if you have other types of data
+                annos = [
+                    utils.transform_instance_annotations(
+                        obj, transforms, image_shape, keypoint_hflip_indices=None
+                    )
+                    for obj in dataset_dict.pop("annotations")
+                    if obj.get("iscrowd", 0) == 0
+                ]
+                instances = utils.annotations_to_instances(
+                    annos, image_shape, mask_format="polygon"
+                )
+
+                # # After transforms such as cropping are applied, the bounding box may no longer
+                # # tightly bound the object. As an example, imagine a triangle object
+                # # [(0,0), (2,0), (0,2)] cropped by a box [(1,0),(2,2)] (XYXY format). The tight
+                # # bounding box of the cropped triangle should be [(1,0),(2,1)], which is not equal to
+                # # the intersection of original bounding box and the cropping box.
+                # if self.recompute_boxes:
+                #     instances.gt_boxes = instances.gt_masks.get_bounding_boxes()
+                
+                dataset_dict["instances"] = utils.filter_empty_instances(instances)
             return dataset_dict
             
         dataloader = build_detection_train_loader(cfg, mapper=mapper)
