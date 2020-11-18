@@ -503,6 +503,7 @@ def _evaluate_predictions_on_coco(
     assert len(coco_results) > 0
 
     if iou_type == "segm":
+        # import pdb; pdb.set_trace()
         coco_results = copy.deepcopy(coco_results)
         # When evaluating mask AP, if the results contain bbox, cocoapi will
         # use the box area as the area of the instance, instead of the mask area.
@@ -534,6 +535,6 @@ def _evaluate_predictions_on_coco(
 
     coco_eval.evaluate()
     coco_eval.accumulate()
-    coco_eval.summarize()
+    coco_eval.summarize()   
 
     return coco_eval

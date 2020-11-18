@@ -13,6 +13,7 @@ import argparse
 import logging
 import os
 import sys
+import copy
 from collections import OrderedDict
 import torch
 from fvcore.common.file_io import PathManager
@@ -39,6 +40,9 @@ from detectron2.utils.collect_env import collect_env_info
 from detectron2.utils.env import seed_all_rng
 from detectron2.utils.events import CommonMetricPrinter, JSONWriter, TensorboardXWriter
 from detectron2.utils.logger import setup_logger
+
+import detectron2.data.transforms as T
+from detectron2.data import detection_utils as utils
 
 from . import hooks
 from .train_loop import SimpleTrainer
@@ -449,7 +453,37 @@ class DefaultTrainer(SimpleTrainer):
         It now calls :func:`detectron2.data.build_detection_train_loader`.
         Overwrite it if you'd like a different data loader.
         """
-        return build_detection_train_loader(cfg)
+        def mapper(dataset_dict):
+            """Customised mapper
+
+            Args:
+                dataset_dict ([type]): [description]
+
+            Returns:
+                Dic: format that the model expects
+            """
+            dataset_dict = copy.deepcopy(dataset_dict)
+            image = utils.read_image(dataset_dict["file_name"], format="BGR")
+            # Define customized data augmentation methods
+            augs = T.AugmentationList([
+                T.RandomBrightness(0.9, 1.1),
+                T.RandomFlip(prob=0.5),
+                T.RandomGaussian(prob=0.01),
+                T.RandomRotation((-90,90), sample_style="range"),
+            ])
+            auginput = T.AugInput(image)
+            transform = augs(auginput)
+            image = torch.from_numpy(auginput.image.copy().transpose(2,0,1))
+            annos = [
+                utils.transform_instance_annotations(annotation, [transform], image.shape[1:])
+                for annotation in dataset_dict.pop("annotations")
+            ]
+            dataset_dict["image"] = image
+            dataset_dict["instances"] = utils.annotations_to_instances(annos, image.shape[1:])
+            return dataset_dict
+            
+        dataloader = build_detection_train_loader(cfg, mapper=mapper)
+        return dataloader
 
     @classmethod
     def build_test_loader(cls, cfg, dataset_name):

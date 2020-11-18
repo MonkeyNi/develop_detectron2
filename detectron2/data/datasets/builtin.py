@@ -27,6 +27,17 @@ from .lvis import get_lvis_instances_meta, register_lvis_instances
 from .pascal_voc import register_pascal_voc
 from .register_coco import register_coco_instances, register_coco_panoptic_separated
 
+
+## custome Covid-19 GGO dataset
+ggo_meta = {"thing_classes": ['ggo'],}
+ggo_base = '/nick_detectron/data/COVID-19-20_v2/cross_val/'
+register_coco_instances('ggo_1', ggo_meta, ggo_base+"1/annotations/instances_train.json", ggo_base+"1/image")
+register_coco_instances('ggo_2', ggo_meta, ggo_base+"2/annotations/instances_train.json", ggo_base+"2/image")
+register_coco_instances('ggo_3', ggo_meta, ggo_base+"3/annotations/instances_train.json", ggo_base+"3/image")
+register_coco_instances('ggo_4', ggo_meta, ggo_base+"4/annotations/instances_train.json", ggo_base+"4/image")
+register_coco_instances('ggo_5', ggo_meta, ggo_base+"5/annotations/instances_train.json", ggo_base+"5/image")
+
+
 # ==== Predefined datasets and splits for COCO ==========
 
 _PREDEFINED_SPLITS_COCO = {}

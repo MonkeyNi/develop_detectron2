@@ -30,6 +30,7 @@ __all__ = [
     "Resize",
     "ResizeShortestEdge",
     "RandomCrop_CategoryAreaConstraint",
+    "RandomGaussian",
 ]
 
 
@@ -477,3 +478,26 @@ class RandomLighting(Augmentation):
         return BlendTransform(
             src_image=self.eigen_vecs.dot(weights * self.eigen_vals), src_weight=1.0, dst_weight=1.0
         )
+
+
+class RandomGaussian(Augmentation):
+    """Random gaussian noise
+
+    Args:
+        Augmentation ([type]): [description]
+    """
+    def __init__(self, prob=0.15):
+        super().__init__()
+        self.mu = 0
+        self.sigma = 0.01
+        self.prob = prob
+        
+    def get_transform(self, image):
+        gaussian_noise = np.random.normal(self.mu, self.sigma, size=image.shape)
+        do = self._rand_range() < self.prob
+        if do:
+            return BlendTransform(
+                src_image=gaussian_noise, src_weight=1.0, dst_weight=1.0
+            )
+        else:
+            return NoOpTransform()

@@ -62,8 +62,9 @@ class VisualizationDemo(object):
             if "instances" in predictions:
                 instances = predictions["instances"].to(self.cpu_device)
                 vis_output = visualizer.draw_instance_predictions(predictions=instances)
-
-        return predictions, vis_output
+                # import pdb; pdb.set_trace()
+                masks = instances.get('pred_masks') 
+        return predictions, vis_output, masks
 
     def _frame_from_video(self, video):
         while video.isOpened():

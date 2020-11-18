@@ -131,6 +131,7 @@ Category ids in annotations are not in [1, #categories]! We'll apply a mapping f
         )
 
     imgs_anns = list(zip(imgs, anns))
+    # import pdb; pdb.set_trace()
     logger.info("Loaded {} images in COCO format from {}".format(len(imgs_anns), json_file))
 
     dataset_dicts = []
@@ -162,6 +163,7 @@ Category ids in annotations are not in [1, #categories]! We'll apply a mapping f
             obj = {key: anno[key] for key in ann_keys if key in anno}
 
             segm = anno.get("segmentation", None)
+            # import pdb; pdb.set_trace()
             if segm:  # either list[list[float]] or dict(RLE)
                 if isinstance(segm, dict):
                     if isinstance(segm["counts"], list):

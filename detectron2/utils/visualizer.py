@@ -425,6 +425,7 @@ class Visualizer:
                 mask_color = None
 
             binary_mask = (sem_seg == label).astype(np.uint8)
+            # import pdb; pdb.set_trace()
             text = self.metadata.stuff_classes[label]
             self.draw_binary_mask(
                 binary_mask,

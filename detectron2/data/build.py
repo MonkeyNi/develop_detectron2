@@ -243,7 +243,7 @@ def get_detection_dataset_dicts(
             print_instances_class_histogram(dataset_dicts, class_names)
         except AttributeError:  # class names are not available for this dataset
             pass
-
+    # import pdb; pdb.set_trace()
     assert len(dataset_dicts), "No valid data found in {}.".format(",".join(dataset_names))
     return dataset_dicts
 

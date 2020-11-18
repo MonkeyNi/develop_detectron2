@@ -237,6 +237,10 @@ def _get_coco_panoptic_separated_meta():
 
 
 def _get_builtin_metadata(dataset_name):
+    if dataset_name == 'ggo':
+        return {
+            "thing_classes": ['ggo'],
+        }
     if dataset_name == "coco":
         return _get_coco_instances_meta()
     if dataset_name == "coco_panoptic_separated":
