@@ -36,7 +36,7 @@ class BasicBlock(CNNBlockBase):
     with two 3x3 conv layers and a projection shortcut if needed.
     """
 
-    def __init__(self, in_channels, out_channels, *, stride=1, norm="BN"):
+    def __init__(self, in_channels, out_channels, *, stride=1, norm="IN"):
         """
         Args:
             in_channels (int): Number of input channels.
@@ -113,7 +113,7 @@ class BottleneckBlock(CNNBlockBase):
         bottleneck_channels,
         stride=1,
         num_groups=1,
-        norm="BN",
+        norm="IN",
         stride_in_1x1=False,
         dilation=1,
     ):
@@ -225,7 +225,7 @@ class DeformBottleneckBlock(CNNBlockBase):
         bottleneck_channels,
         stride=1,
         num_groups=1,
-        norm="BN",
+        norm="IN",
         stride_in_1x1=False,
         dilation=1,
         deform_modulated=False,
@@ -333,7 +333,7 @@ class BasicStem(CNNBlockBase):
     The standard ResNet stem (layers before the first residual block).
     """
 
-    def __init__(self, in_channels=3, out_channels=64, norm="BN"):
+    def __init__(self, in_channels=3, out_channels=64, norm="IN"):
         """
         Args:
             norm (str or callable): norm after the first conv layer.

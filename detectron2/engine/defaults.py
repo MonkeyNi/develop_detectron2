@@ -468,10 +468,10 @@ class DefaultTrainer(SimpleTrainer):
             
             # Define customized data augmentation methods
             augs = T.AugmentationList([
-                T.RandomBrightness(0.9, 1.1),
                 T.RandomFlip(prob=0.5),
-                T.RandomGaussian(prob=0.01),
-                T.RandomRotation((-90,90), sample_style="range"),
+                T.RandomGaussian(prob=0.1),
+                T.RandomApply(T.RandomBrightness(0.9, 1.1)),
+                # T.RandomApply(T.RandomRotation((-90,90), sample_style="range")),
             ])
             
             ### Follow dataset_mapper.py
@@ -521,7 +521,8 @@ class DefaultTrainer(SimpleTrainer):
             
         dataloader = build_detection_train_loader(cfg, mapper=mapper)
         return dataloader
-
+        # return build_detection_train_loader(cfg)
+        
     @classmethod
     def build_test_loader(cls, cfg, dataset_name):
         """

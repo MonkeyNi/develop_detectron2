@@ -94,7 +94,8 @@ if __name__ == "__main__":
             
             # ## Nick
             mask_out, mask_name = os.path.split(path)
-            mask_out = mask_out + '_infer'
+            # mask_out = mask_out + '_infer'
+            mask_out = args.output[:-1] + '_mask'
             if not os.path.exists(mask_out):
                 os.makedirs(mask_out)
             mask_name = os.path.join(mask_out, mask_name)

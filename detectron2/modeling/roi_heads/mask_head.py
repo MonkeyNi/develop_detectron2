@@ -107,7 +107,28 @@ def mask_rcnn_loss(pred_mask_logits, instances, vis_period=0):
             storage.put_image(name + f" ({idx})", vis_mask)
 
     mask_loss = F.binary_cross_entropy_with_logits(pred_mask_logits, gt_masks, reduction="mean")
-    return mask_loss
+    
+    def weighted_dice_loss(predictions, targets, weight):
+        """Add dice loss
+
+        Args:
+            predictions ([Tensor]): [description]
+            targets ([Tensor]): [description]
+            weight (): [description]
+        """
+        smooth, gt, pred = 1.0, targets, predictions
+        assert (gt.shape == pred.shape)
+        gt[gt>=1] = 1
+        pred[pred>=0] = 1
+        pred[pred<0] = 0
+        iou = torch.sum(pred[gt==1])
+        union = (torch.sum(gt) + torch.sum(pred))
+        score = (2*iou+smooth) / (union+smooth)
+        dice_loss = 1 - score
+        return dice_loss
+    
+    dice_loss = weighted_dice_loss(pred_mask_logits, gt_masks, 1.0)
+    return mask_loss, dice_loss
 
 
 def mask_rcnn_inference(pred_mask_logits, pred_instances):
@@ -187,7 +208,8 @@ class BaseMaskRCNNHead(nn.Module):
         """
         x = self.layers(x)
         if self.training:
-            return {"loss_mask": mask_rcnn_loss(x, instances, self.vis_period)}
+            mask_loss, dice_loss = mask_rcnn_loss(x, instances, self.vis_period)
+            return {"loss_mask": mask_loss, "loss_dice": dice_loss}
         else:
             mask_rcnn_inference(x, instances)
             return instances

@@ -125,7 +125,9 @@ class PointRendROIHeads(StandardROIHeads):
             proposal_boxes = [x.proposal_boxes for x in proposals]
             mask_coarse_logits = self._forward_mask_coarse(features, proposal_boxes)
 
-            losses = {"loss_mask": mask_rcnn_loss(mask_coarse_logits, proposals)}
+            mask_loss, _ = mask_rcnn_loss(mask_coarse_logits, proposals)
+            losses = {"loss_mask": mask_loss}
+            
             losses.update(self._forward_mask_point(features, mask_coarse_logits, proposals))
             return losses
         else:

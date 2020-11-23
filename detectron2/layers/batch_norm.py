@@ -146,6 +146,7 @@ def get_norm(norm, out_channels):
             # for debugging:
             "nnSyncBN": nn.SyncBatchNorm,
             "naiveSyncBN": NaiveSyncBatchNorm,
+            "IN": nn.InstanceNorm2d,
         }[norm]
     return norm(out_channels)
 
