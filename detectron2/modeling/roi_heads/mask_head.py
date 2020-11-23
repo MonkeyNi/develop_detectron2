@@ -116,7 +116,7 @@ def mask_rcnn_loss(pred_mask_logits, instances, vis_period=0):
             targets ([Tensor]): [description]
             weight (): [description]
         """
-        smooth, gt, pred = 1.0, targets, predictions
+        smooth, gt, pred = 1.0, targets.clone(), predictions.clone()  # set value is in-place operation
         assert (gt.shape == pred.shape)
         gt[gt>=1] = 1
         pred[pred>=0] = 1
