@@ -16,6 +16,7 @@ from predictor import VisualizationDemo
 from torchvision.utils import save_image
 import numpy as np
 import cv2
+import torch 
 
 # constants
 WINDOW_NAME = "COCO detections"
@@ -90,19 +91,21 @@ if __name__ == "__main__":
             # use PIL, to be consistent with evaluation
             img = read_image(path, format="BGR")
             start_time = time.time()
-            predictions, visualized_output, masks = demo.run_on_image(img)
+            predictions, visualized_output, scores, masks = demo.run_on_image(img)
             
             # ## Nick
             mask_out, mask_name = os.path.split(path)
-            # mask_out = mask_out + '_infer'
             mask_out = args.output[:-1] + '_mask'
             if not os.path.exists(mask_out):
                 os.makedirs(mask_out)
             mask_name = os.path.join(mask_out, mask_name)
             if len(masks) != 0:
                 # save the prediction mask
-                mask = sum(masks)
-                save_image(mask.float(), mask_name)
+                masks_image = torch.zeros(masks[0].shape)
+                for score, mask in zip(scores, masks):
+                    if score.item() > 0.9:
+                        masks_image += mask
+                save_image(masks_image.float(), mask_name)
             if len(masks) == 0:
                 # create a black mask
                 masks = np.zeros((512,512,3))
