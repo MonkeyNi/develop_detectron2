@@ -101,10 +101,7 @@ if __name__ == "__main__":
             mask_name = os.path.join(mask_out, mask_name)
             if len(masks) != 0:
                 # save the prediction mask
-                masks_image = torch.zeros(masks[0].shape)
-                for score, mask in zip(scores, masks):
-                    if score.item() > 0.9:
-                        masks_image += mask
+                masks_out = sum(masks)
                 save_image(masks_image.float(), mask_name)
             if len(masks) == 0:
                 # create a black mask
